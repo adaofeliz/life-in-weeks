@@ -274,7 +274,7 @@ export function LifeInWeeksCanvas({
         
         return (
           <div className="text-center mt-4 font-mono text-sm text-[#6b6560]">
-            Year {displayYear + 1}, Week {displayWeek + 1}
+            Year {displayYear}, Week {displayWeek + 1}
             {weekNumber < weeksLived ? (
               <span className="ml-2 text-[#1a1a1a]">• Lived</span>
             ) : weekNumber === weeksLived ? (

@@ -25,11 +25,34 @@ export const SPACING_RATIO = 0.18
 
 /**
  * Calculate the number of weeks lived from birth date to today
+ * Uses birthday-aligned calculation so each row represents one year of life
  */
 export function calculateWeeksLived(birthDate: Date): number {
   const today = new Date()
+  
+  // Calculate age in complete years
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const hadBirthdayThisYear =
+    today.getMonth() > birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate())
+  
+  if (!hadBirthdayThisYear) {
+    age--
+  }
+  
+  // Calculate last birthday date
+  const lastBirthday = new Date(birthDate)
+  lastBirthday.setFullYear(birthDate.getFullYear() + age)
+  
+  // Calculate weeks since last birthday
   const msPerWeek = 7 * 24 * 60 * 60 * 1000
-  const weeksLived = Math.floor((today.getTime() - birthDate.getTime()) / msPerWeek)
+  const weeksSinceLastBirthday = Math.floor(
+    (today.getTime() - lastBirthday.getTime()) / msPerWeek
+  )
+  
+  // Total weeks = complete years × 52 + weeks into current year
+  const weeksLived = age * WEEKS_PER_YEAR + Math.min(weeksSinceLastBirthday, WEEKS_PER_YEAR - 1)
+  
   return Math.min(Math.max(0, weeksLived), TOTAL_WEEKS)
 }
 
