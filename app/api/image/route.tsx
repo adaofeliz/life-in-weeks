@@ -163,7 +163,7 @@ export async function GET(request: Request) {
         <div
           style={{
             display: 'flex',
-            marginTop: 35,
+            marginTop: 15,
             fontSize: Math.max(11, height * 0.013),
             color: '#6b6560',
             fontFamily: 'monospace',
