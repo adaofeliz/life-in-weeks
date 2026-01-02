@@ -1,10 +1,9 @@
 'use client'
 
-import { useRef, useEffect, useCallback, useState } from 'react'
+import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react'
 import {
   TOTAL_YEARS,
   WEEKS_PER_YEAR,
-  TOTAL_WEEKS,
   colors,
   calculateWeeksLived,
   calculateGridLayout,
@@ -12,25 +11,32 @@ import {
   getFadedWeekColor,
 } from '@/lib/life-in-weeks'
 import { MobileSetupModal } from './MobileSetupModal'
+import { CopyIcon, CheckIcon, DownloadIcon, PhoneIcon, MonitorIcon } from './Icons'
+
+export interface LifeInWeeksCanvasRef {
+  downloadImage: () => void
+  copyLink: () => Promise<void>
+  openMobileModal: () => void
+}
 
 interface LifeInWeeksCanvasProps {
   birthDate: Date
-  livedColor?: string
-  remainingColor?: string
   width?: number
   height?: number
+  onWallpaperMode?: () => void
+  hideControls?: boolean
 }
 
-// Canvas-specific top space ratio (smaller than API image for title/subtitle)
-const CANVAS_TOP_SPACE_RATIO = 0.08
+// Canvas-specific top space ratio (smaller for balanced frame appearance)
+const CANVAS_TOP_SPACE_RATIO = 0.05
 
-export function LifeInWeeksCanvas({
+export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCanvasProps>(function LifeInWeeksCanvas({
   birthDate,
-  livedColor = '#1a1a1a',
-  remainingColor = '#e8e4df',
   width = 800,
   height = 1000,
-}: LifeInWeeksCanvasProps) {
+  onWallpaperMode,
+  hideControls = false,
+}, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [hoveredWeek, setHoveredWeek] = useState<{ year: number; week: number } | null>(null)
@@ -78,21 +84,7 @@ export function LifeInWeeksCanvas({
     ctx.fillStyle = colors.textPrimary
     ctx.font = `600 ${Math.max(16, displayHeight * 0.022)}px var(--font-crimson), Georgia, serif`
     ctx.textAlign = 'center'
-    ctx.fillText('YOUR LIFE IN WEEKS', displayWidth / 2, topSpace * 0.4)
-
-    // Draw subtitle
-    ctx.fillStyle = colors.textSecondary
-    ctx.font = `${Math.max(11, displayHeight * 0.013)}px var(--font-mono), monospace`
-    const formattedDate = birthDate.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    })
-    ctx.fillText(
-      `Born ${formattedDate} · ${weeksLived.toLocaleString()} of ${TOTAL_WEEKS.toLocaleString()} weeks`,
-      displayWidth / 2,
-      topSpace * 0.65
-    )
+    ctx.fillText('YOUR LIFE IN WEEKS', displayWidth / 2, topSpace * 0.55)
 
     // Draw grid
     for (let year = 0; year < TOTAL_YEARS; year++) {
@@ -104,16 +96,16 @@ export function LifeInWeeksCanvas({
 
         const isHovered = hoveredWeek?.year === year && hoveredWeek?.week === week
         
-        // Use shared color logic, with custom colors if provided via props
+        // Use shared color logic
         const baseColor = getWeekColor(weekNumber, weeksLived, isHovered)
-        // Override with prop colors for lived/remaining (non-current, non-hovered)
         const isCurrentWeek = weekNumber === weeksLived
+        
         if (!isCurrentWeek && !isHovered) {
           if (weekNumber < weeksLived) {
             // Apply fading effect for older weeks (past 10 years fade toward background)
-            ctx.fillStyle = getFadedWeekColor(weekNumber, weeksLived, livedColor, colors.background)
+            ctx.fillStyle = getFadedWeekColor(weekNumber, weeksLived, colors.lived, colors.background)
           } else {
-            ctx.fillStyle = remainingColor
+            ctx.fillStyle = colors.remaining
           }
         } else {
           ctx.fillStyle = baseColor
@@ -141,7 +133,7 @@ export function LifeInWeeksCanvas({
     // Draw "90" at the bottom
     ctx.fillText('90', startX - 8, startY + TOTAL_YEARS * cellSize)
 
-  }, [dimensions, weeksLived, livedColor, remainingColor, birthDate, hoveredWeek])
+  }, [dimensions, weeksLived, birthDate, hoveredWeek])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
@@ -210,114 +202,87 @@ export function LifeInWeeksCanvas({
     }
   }
 
+  const openMobileModal = () => setShowMobileModal(true)
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    downloadImage,
+    copyLink,
+    openMobileModal,
+  }))
+
+  // Calculate current week position (the week being lived right now)
+  const currentYear = Math.floor(weeksLived / WEEKS_PER_YEAR)
+  const currentWeek = weeksLived % WEEKS_PER_YEAR
+  
+  // Use hovered week if hovering, otherwise show current week
+  const displayYear = hoveredWeek?.year ?? currentYear
+  const displayWeek = hoveredWeek?.week ?? currentWeek
+  const weekNumber = displayYear * WEEKS_PER_YEAR + displayWeek
+  const isCurrentWeekDisplay = !hoveredWeek
+
   return (
     <div ref={containerRef} className="w-full">
+      {/* Week indicator - centered between border and canvas */}
+      <div className="text-center mt-4 mb-4 font-mono text-sm text-[#6b6560]">
+        Year {displayYear}, Week {displayWeek + 1}
+        {weekNumber < weeksLived ? (
+          <span className="ml-2 text-[#1a1a1a]">• Lived</span>
+        ) : weekNumber === weeksLived ? (
+          <span className="ml-2 text-[#c45d3a]">• Now{isCurrentWeekDisplay ? '' : ' (current)'}</span>
+        ) : (
+          <span className="ml-2 text-[#a8a29e]">• Ahead</span>
+        )}
+      </div>
+
+      {/* Controls - conditionally rendered */}
+      {!hideControls && (
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <button
+            onClick={copyLink}
+            title="Copy link"
+            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+          >
+            {copied ? (
+              <CheckIcon className="w-5 h-5 text-green-400" />
+            ) : (
+              <CopyIcon />
+            )}
+          </button>
+          <button
+            onClick={downloadImage}
+            title="Download PNG"
+            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+          >
+            <DownloadIcon />
+          </button>
+          <button
+            onClick={openMobileModal}
+            title="iOS wallpaper setup"
+            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+          >
+            <PhoneIcon />
+          </button>
+          {onWallpaperMode && (
+            <button
+              onClick={onWallpaperMode}
+              title="Web wallpaper mode"
+              className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+            >
+              <MonitorIcon />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Canvas */}
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="cursor-crosshair mx-auto block"
+        className="cursor-crosshair mx-auto block mb-12"
         style={{ maxWidth: '100%' }}
       />
-      {(() => {
-        // Calculate current week position (the week being lived right now)
-        const currentYear = Math.floor(weeksLived / WEEKS_PER_YEAR)
-        const currentWeek = weeksLived % WEEKS_PER_YEAR
-        
-        // Use hovered week if hovering, otherwise show current week
-        const displayYear = hoveredWeek?.year ?? currentYear
-        const displayWeek = hoveredWeek?.week ?? currentWeek
-        const weekNumber = displayYear * WEEKS_PER_YEAR + displayWeek
-        const isCurrentWeek = !hoveredWeek
-        
-        return (
-          <div className="text-center mt-4 font-mono text-sm text-[#6b6560]">
-            Year {displayYear}, Week {displayWeek + 1}
-            {weekNumber < weeksLived ? (
-              <span className="ml-2 text-[#1a1a1a]">• Lived</span>
-            ) : weekNumber === weeksLived ? (
-              <span className="ml-2 text-[#c45d3a]">• Now{isCurrentWeek ? '' : ' (current)'}</span>
-            ) : (
-              <span className="ml-2 text-[#a8a29e]">• Ahead</span>
-            )}
-          </div>
-        )
-      })()}
-      <div className="flex items-center justify-center gap-2 mt-6">
-        <button
-          onClick={copyLink}
-          title="Copy link"
-          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
-        >
-          {copied ? (
-            <svg
-              className="w-5 h-5 text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-          )}
-        </button>
-        <button
-          onClick={downloadImage}
-          title="Download PNG"
-          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-        </button>
-        <button
-          onClick={() => setShowMobileModal(true)}
-          title="iOS wallpaper setup"
-          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-            />
-          </svg>
-        </button>
-      </div>
 
       {/* Mobile Setup Modal */}
       <MobileSetupModal
@@ -326,6 +291,61 @@ export function LifeInWeeksCanvas({
         birthDate={birthDate}
         baseUrl={typeof window !== 'undefined' ? window.location.origin : ''}
       />
+    </div>
+  )
+})
+
+// Standalone controls component for use outside the canvas
+interface LifeInWeeksControlsProps {
+  canvasRef: React.RefObject<LifeInWeeksCanvasRef | null>
+  onWallpaperMode?: () => void
+}
+
+export function LifeInWeeksControls({ canvasRef, onWallpaperMode }: LifeInWeeksControlsProps) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyLink = async () => {
+    await canvasRef.current?.copyLink()
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <button
+        onClick={handleCopyLink}
+        title="Copy link"
+        className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+      >
+        {copied ? (
+          <CheckIcon className="w-5 h-5 text-green-400" />
+        ) : (
+          <CopyIcon />
+        )}
+      </button>
+      <button
+        onClick={() => canvasRef.current?.downloadImage()}
+        title="Download PNG"
+        className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+      >
+        <DownloadIcon />
+      </button>
+      <button
+        onClick={() => canvasRef.current?.openMobileModal()}
+        title="iOS wallpaper setup"
+        className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+      >
+        <PhoneIcon />
+      </button>
+      {onWallpaperMode && (
+        <button
+          onClick={onWallpaperMode}
+          title="Web wallpaper mode"
+          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        >
+          <MonitorIcon />
+        </button>
+      )}
     </div>
   )
 }

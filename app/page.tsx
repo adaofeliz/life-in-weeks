@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { LifeInWeeksCanvas } from '@/components/LifeInWeeksCanvas'
+import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { LifeInWeeksCanvas, LifeInWeeksControls, type LifeInWeeksCanvasRef } from '@/components/LifeInWeeksCanvas'
+import { WallpaperMode } from '@/components/WallpaperMode'
 import {
   parseBirthDate,
   validateBirthDate,
@@ -12,19 +13,24 @@ import {
 
 function HomeContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const canvasRef = useRef<LifeInWeeksCanvasRef>(null)
   const [birthDateInput, setBirthDateInput] = useState('')
   const [birthDate, setBirthDate] = useState<Date | null>(null)
   const [stats, setStats] = useState<LifeStats | null>(null)
   const [error, setError] = useState('')
   const [isVisible, setIsVisible] = useState(false)
+  const [isWallpaperMode, setIsWallpaperMode] = useState(false)
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
 
-  // Handle birthDate from URL query params
+  // Handle birthDate and wallpaper from URL query params
   useEffect(() => {
     const birthDateParam = searchParams.get('birthDate')
+    const wallpaperParam = searchParams.get('wallpaper')
+
     if (birthDateParam) {
       const date = parseBirthDate(birthDateParam)
       const validation = validateBirthDate(date)
@@ -33,9 +39,33 @@ function HomeContent() {
         setBirthDateInput(birthDateParam)
         setBirthDate(date)
         setStats(calculateLifeStats(date))
+
+        // Enable wallpaper mode if param is present
+        if (wallpaperParam === 'true') {
+          setIsWallpaperMode(true)
+        }
       }
     }
   }, [searchParams])
+
+  // Enter wallpaper mode
+  const enterWallpaperMode = useCallback(() => {
+    if (!birthDate) return
+    setIsWallpaperMode(true)
+    const dateStr = birthDate.toISOString().split('T')[0]
+    router.push(`?birthDate=${dateStr}&wallpaper=true`, { scroll: false })
+  }, [birthDate, router])
+
+  // Exit wallpaper mode
+  const exitWallpaperMode = useCallback(() => {
+    setIsWallpaperMode(false)
+    if (birthDate) {
+      const dateStr = birthDate.toISOString().split('T')[0]
+      router.push(`?birthDate=${dateStr}`, { scroll: false })
+    } else {
+      router.push('/', { scroll: false })
+    }
+  }, [birthDate, router])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +86,11 @@ function HomeContent() {
 
     setBirthDate(date)
     setStats(calculateLifeStats(date))
+  }
+
+  // Render wallpaper mode if active
+  if (isWallpaperMode && birthDate) {
+    return <WallpaperMode birthDate={birthDate} onExit={exitWallpaperMode} />
   }
 
   return (
@@ -163,11 +198,13 @@ function HomeContent() {
 
             {/* Progress Bar */}
             <div className="mb-12">
-              <div className="h-2 bg-[#e8e4df] rounded-full overflow-hidden">
+              <div className="h-2 bg-[#e8e4df] rounded-full overflow-hidden relative">
                 <div
-                  className="h-full bg-[#1a1a1a] transition-all duration-1000 ease-out"
+                  className="h-full bg-[#1a1a1a] transition-all duration-1000 ease-out flex items-center justify-end"
                   style={{ width: `${Math.min(100, stats.percentageLived)}%` }}
-                />
+                >
+                  <div className="w-2 h-2 bg-[#c45d3a] flex-shrink-0" />
+                </div>
               </div>
               <div className="flex justify-between mt-2 text-xs font-mono text-[#a8a29e]">
                 <span>Birth</span>
@@ -175,9 +212,14 @@ function HomeContent() {
               </div>
             </div>
 
+            {/* Controls - outside border */}
+            <div className="mb-6">
+              <LifeInWeeksControls canvasRef={canvasRef} onWallpaperMode={enterWallpaperMode} />
+            </div>
+
             {/* Canvas */}
-            <div className="bg-white border border-[#d4cfc8] p-6 md:p-10">
-              <LifeInWeeksCanvas birthDate={birthDate} />
+            <div className="bg-white border border-[#d4cfc8]">
+              <LifeInWeeksCanvas ref={canvasRef} birthDate={birthDate} hideControls />
             </div>
 
             {/* Quote */}

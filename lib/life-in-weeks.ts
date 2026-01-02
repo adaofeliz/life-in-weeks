@@ -266,10 +266,14 @@ export function validateBirthDate(date: Date): ValidationResult {
  * Complete life statistics based on birth date
  */
 export interface LifeStats {
-  weeksLived: number
-  weeksRemaining: number
+  secondsLived: number
+  minutesLived: number
+  hoursLived: number
   daysLived: number
   daysRemaining: number
+  weeksLived: number
+  weeksRemaining: number
+  monthsLived: number
   yearsLived: number
   percentageLived: number
 }
@@ -280,21 +284,36 @@ export interface LifeStats {
  */
 export function calculateLifeStats(birthDate: Date): LifeStats {
   const today = new Date()
+  const msPerSecond = 1000
+  const msPerMinute = 60 * 1000
+  const msPerHour = 60 * 60 * 1000
   const msPerDay = 24 * 60 * 60 * 1000
 
-  const daysLived = Math.floor((today.getTime() - birthDate.getTime()) / msPerDay)
+  const elapsedMs = today.getTime() - birthDate.getTime()
+  const secondsLived = Math.floor(elapsedMs / msPerSecond)
+  const minutesLived = Math.floor(elapsedMs / msPerMinute)
+  const hoursLived = Math.floor(elapsedMs / msPerHour)
+  const daysLived = Math.floor(elapsedMs / msPerDay)
   const weeksLived = calculateWeeksLived(birthDate)
   const weeksRemaining = Math.max(0, TOTAL_WEEKS - weeksLived)
   const totalDays = Math.round(TOTAL_YEARS * 365.25)
   const daysRemaining = Math.max(0, totalDays - daysLived)
+  
+  // Calculate months lived (approximate using average month length)
+  const monthsLived = Math.floor(daysLived / 30.4375)
+  
   const yearsLived = daysLived / 365.25
   const percentageLived = (weeksLived / TOTAL_WEEKS) * 100
 
   return {
-    weeksLived,
-    weeksRemaining,
+    secondsLived,
+    minutesLived,
+    hoursLived,
     daysLived,
     daysRemaining,
+    weeksLived,
+    weeksRemaining,
+    monthsLived,
     yearsLived,
     percentageLived,
   }

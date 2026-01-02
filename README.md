@@ -13,6 +13,7 @@ A beautiful visual representation of a 90-year human life where each box is one 
 - **Progress bar** - Visual progress bar showing your life progression
 - **Download as PNG** - Save your personalized life chart as a high-quality image
 - **Shareable links** - Copy and share your personalized life chart URL with others
+- **Web Wallpaper mode** - Fullscreen real-time life counter for desktop/browser use
 - **iOS Wallpaper automation** - Set up automatic daily wallpaper updates on your iPhone lock screen
 - **Custom image generation** - Generate wallpaper images for any iPhone model (iPhone 14-17 series, SE)
 - **Responsive design** - Works beautifully on all devices
@@ -60,27 +61,55 @@ npm i -g vercel
 vercel
 ```
 
+## Web Wallpaper Mode
+
+A fullscreen, distraction-free view of your life in weeks with a real-time counter — perfect for keeping open as a browser tab or setting as a desktop wallpaper.
+
+### Features
+
+- **Real-time life counter** - Watch your life tick by in seconds, minutes, hours, days, months, and years
+- **Precise percentage** - See your life progress with 8 decimal places of precision
+- **Minimal UI** - Clean, focused design with no distractions
+- **Responsive** - Automatically adjusts to any screen size
+
+### Usage
+
+Access wallpaper mode by adding `&wallpaper=true` to any URL with a birth date:
+
+```
+https://your-domain.com/?birthDate=1990-01-15&wallpaper=true
+```
+
+Or click the monitor icon in the app after entering your birth date.
+
+### Use Cases
+
+- Keep open as a dedicated browser tab for daily reflection
+- Set as a browser homepage for a mindful start to each day
+- Use browser's "Add to Desktop" feature for a standalone app experience
+- Display on a secondary monitor as an ambient life visualization
+
 ## API Usage
 
 ### Get Life Stats
 
 ```
-GET /api/stats?birth_date=1990-01-15
+GET /api/stats?birthDate=1990-01-15
 ```
 
 **Response:**
 
 ```json
 {
-  "birth_date": "1990-01-15",
-  "current_date": "2024-01-15",
-  "total_weeks_in_90_years": 4680,
-  "weeks_lived": 1774,
-  "weeks_remaining": 2906,
-  "percentage_lived": 37.91,
-  "years_lived": 34.0,
-  "days_lived": 12419,
-  "days_remaining": 20431
+  "birthDate": "1990-01-15",
+  "currentDate": "2024-01-15",
+  "totalWeeksIn90Years": 4680,
+  "weeksLived": 1774,
+  "weeksRemaining": 2906,
+  "percentageLived": 37.91,
+  "yearsLived": 34.0,
+  "daysLived": 12419,
+  "daysRemaining": 20431
 }
 ```
 
