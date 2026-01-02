@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { LifeInWeeksCanvas, calculateWeeksLived } from '@/components/LifeInWeeksCanvas'
 
 const TOTAL_WEEKS = 90 * 52
@@ -31,7 +32,8 @@ function calculateStats(birthDate: Date): Stats {
   }
 }
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams()
   const [birthDateInput, setBirthDateInput] = useState('')
   const [birthDate, setBirthDate] = useState<Date | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
@@ -41,6 +43,24 @@ export default function Home() {
   useEffect(() => {
     setIsVisible(true)
   }, [])
+
+  // Handle birthDate from URL query params
+  useEffect(() => {
+    const birthDateParam = searchParams.get('birthDate')
+    if (birthDateParam) {
+      const date = new Date(birthDateParam + 'T00:00:00')
+      const today = new Date()
+
+      if (!isNaN(date.getTime()) && date <= today) {
+        const yearsAgo = (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        if (yearsAgo <= 90) {
+          setBirthDateInput(birthDateParam)
+          setBirthDate(date)
+          setStats(calculateStats(date))
+        }
+      }
+    }
+  }, [searchParams])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -303,5 +323,17 @@ export default function Home() {
         </div>
       </footer>
     </main>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="noise-bg min-h-screen flex items-center justify-center">
+        <div className="text-[#6b6560] font-mono">Loading...</div>
+      </main>
+    }>
+      <HomeContent />
+    </Suspense>
   )
 }

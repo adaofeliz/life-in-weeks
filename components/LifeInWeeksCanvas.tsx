@@ -14,6 +14,14 @@ const TOTAL_YEARS = 90
 const WEEKS_PER_YEAR = 52
 const TOTAL_WEEKS = TOTAL_YEARS * WEEKS_PER_YEAR
 
+const SIZE_PRESETS = [
+  { name: 'iPhone 15 Pro Max', width: 1290, height: 2796 },
+  { name: 'iPhone 15 Pro', width: 1179, height: 2556 },
+  { name: 'iPhone 15 / 14', width: 1170, height: 2532 },
+  { name: 'iPhone SE', width: 750, height: 1334 },
+  { name: 'iPhone 13 mini', width: 1080, height: 2340 },
+]
+
 export function calculateWeeksLived(birthDate: Date): number {
   const today = new Date()
   const msPerWeek = 7 * 24 * 60 * 60 * 1000
@@ -32,6 +40,10 @@ export function LifeInWeeksCanvas({
   const containerRef = useRef<HTMLDivElement>(null)
   const [hoveredWeek, setHoveredWeek] = useState<{ year: number; week: number } | null>(null)
   const [dimensions, setDimensions] = useState({ width, height })
+  const [copied, setCopied] = useState(false)
+  const [copiedImageLink, setCopiedImageLink] = useState(false)
+  const [showSizeMenu, setShowSizeMenu] = useState(false)
+  const sizeMenuRef = useRef<HTMLDivElement>(null)
   const gridInfoRef = useRef<{
     startX: number
     startY: number
@@ -208,6 +220,51 @@ export function LifeInWeeksCanvas({
     link.click()
   }
 
+  const copyLink = async () => {
+    const dateStr = birthDate.toISOString().split('T')[0]
+    const url = `${window.location.origin}?birthDate=${dateStr}`
+    
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy link:', err)
+    }
+  }
+
+  const copyImageLink = async (preset: typeof SIZE_PRESETS[0]) => {
+    const dateStr = birthDate.toISOString().split('T')[0]
+    const url = `${window.location.origin}/api/image?birthDate=${dateStr}&width=${preset.width}&height=${preset.height}`
+    
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedImageLink(true)
+      setTimeout(() => setCopiedImageLink(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy image link:', err)
+    }
+    
+    setShowSizeMenu(false)
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sizeMenuRef.current && !sizeMenuRef.current.contains(event.target as Node)) {
+        setShowSizeMenu(false)
+      }
+    }
+
+    if (showSizeMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showSizeMenu])
+
   return (
     <div ref={containerRef} className="w-full">
       <canvas
@@ -241,13 +298,14 @@ export function LifeInWeeksCanvas({
           </div>
         )
       })()}
-      <div className="text-center mt-6">
+      <div className="flex items-center justify-center gap-2 mt-6">
         <button
           onClick={downloadImage}
-          className="btn-primary inline-flex items-center gap-2 px-6 py-3 bg-[#1a1a1a] text-white font-mono text-sm tracking-wide hover:bg-[#333] transition-colors"
+          title="Download PNG"
+          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
         >
           <svg
-            className="w-4 h-4"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -259,8 +317,98 @@ export function LifeInWeeksCanvas({
               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
             />
           </svg>
-          Download PNG
         </button>
+        <button
+          onClick={copyLink}
+          title="Copy link"
+          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        >
+          {copied ? (
+            <svg
+              className="w-5 h-5 text-green-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+          )}
+        </button>
+        <div className="relative" ref={sizeMenuRef}>
+          <button
+            onClick={() => setShowSizeMenu(!showSizeMenu)}
+            title="Copy image link for device"
+            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+          >
+            {copiedImageLink ? (
+              <svg
+                className="w-5 h-5 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                />
+              </svg>
+            )}
+          </button>
+          {showSizeMenu && (
+            <div className="absolute bottom-full mb-2 right-0 bg-white border border-[#d4cfc8] shadow-lg z-10 min-w-[220px]">
+              <div className="px-3 py-2 text-xs font-mono text-[#6b6560] border-b border-[#d4cfc8]">
+                COPY IMAGE LINK
+              </div>
+              {SIZE_PRESETS.map((preset) => (
+                <button
+                  key={preset.name}
+                  onClick={() => copyImageLink(preset)}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-[#f5f3f0] transition-colors flex justify-between items-center"
+                >
+                  <span className="text-[#1a1a1a]">{preset.name}</span>
+                  <span className="text-xs font-mono text-[#a8a29e]">
+                    {preset.width}×{preset.height}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
