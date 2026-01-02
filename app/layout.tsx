@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Crimson_Pro, JetBrains_Mono } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const crimsonPro = Crimson_Pro({
@@ -35,6 +36,7 @@ export default function RootLayout({
       <body className="antialiased">
         {children}
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )
