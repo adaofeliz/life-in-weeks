@@ -10,6 +10,7 @@ import {
   calculateGridLayout,
   getWeekColor,
 } from '@/lib/life-in-weeks'
+import { MobileSetupModal } from './MobileSetupModal'
 
 // Re-export for backward compatibility with page.tsx
 export { calculateWeeksLived }
@@ -21,14 +22,6 @@ interface LifeInWeeksCanvasProps {
   width?: number
   height?: number
 }
-
-const SIZE_PRESETS = [
-  { name: 'iPhone Pro Max', width: 1320, height: 2868 },
-  { name: 'iPhone Pro', width: 1218, height: 2634 },
-  { name: 'iPhone Plus / Air', width: 1290, height: 2796 },
-  { name: 'iPhone 14', width: 1170, height: 2532 },
-  { name: 'iPhone SE', width: 750, height: 1334 }
-]
 
 // Canvas-specific top space ratio (smaller than API image for title/subtitle)
 const CANVAS_TOP_SPACE_RATIO = 0.08
@@ -45,9 +38,7 @@ export function LifeInWeeksCanvas({
   const [hoveredWeek, setHoveredWeek] = useState<{ year: number; week: number } | null>(null)
   const [dimensions, setDimensions] = useState({ width, height })
   const [copied, setCopied] = useState(false)
-  const [copiedImageLink, setCopiedImageLink] = useState(false)
-  const [showSizeMenu, setShowSizeMenu] = useState(false)
-  const sizeMenuRef = useRef<HTMLDivElement>(null)
+  const [showMobileModal, setShowMobileModal] = useState(false)
   const gridInfoRef = useRef<{
     startX: number
     startY: number
@@ -220,38 +211,6 @@ export function LifeInWeeksCanvas({
     }
   }
 
-  const copyImageLink = async (preset: typeof SIZE_PRESETS[0]) => {
-    const dateStr = birthDate.toISOString().split('T')[0]
-    const url = `${window.location.origin}/api/image?birthDate=${dateStr}&width=${preset.width}&height=${preset.height}`
-    
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopiedImageLink(true)
-      setTimeout(() => setCopiedImageLink(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy image link:', err)
-    }
-    
-    setShowSizeMenu(false)
-  }
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sizeMenuRef.current && !sizeMenuRef.current.contains(event.target as Node)) {
-        setShowSizeMenu(false)
-      }
-    }
-
-    if (showSizeMenu) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showSizeMenu])
-
   return (
     <div ref={containerRef} className="w-full">
       <canvas
@@ -287,25 +246,6 @@ export function LifeInWeeksCanvas({
       })()}
       <div className="flex items-center justify-center gap-2 mt-6">
         <button
-          onClick={downloadImage}
-          title="Download PNG"
-          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-        </button>
-        <button
           onClick={copyLink}
           title="Copy link"
           className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
@@ -340,63 +280,53 @@ export function LifeInWeeksCanvas({
             </svg>
           )}
         </button>
-        <div className="relative" ref={sizeMenuRef}>
-          <button
-            onClick={() => setShowSizeMenu(!showSizeMenu)}
-            title="Copy image link for device"
-            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        <button
+          onClick={downloadImage}
+          title="Download PNG"
+          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            {copiedImageLink ? (
-              <svg
-                className="w-5 h-5 text-green-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                />
-              </svg>
-            )}
-          </button>
-          {showSizeMenu && (
-            <div className="absolute bottom-full mb-2 right-0 bg-white border border-[#d4cfc8] shadow-lg z-10 min-w-[220px]">
-              <div className="px-3 py-2 text-xs font-mono text-[#6b6560] border-b border-[#d4cfc8]">
-                COPY IMAGE LINK
-              </div>
-              {SIZE_PRESETS.map((preset) => (
-                <button
-                  key={preset.name}
-                  onClick={() => copyImageLink(preset)}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-[#f5f3f0] transition-colors flex justify-between items-center"
-                >
-                  <span className="text-[#1a1a1a]">{preset.name}</span>
-                  <span className="text-xs font-mono text-[#a8a29e]">
-                    {preset.width}×{preset.height}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={() => setShowMobileModal(true)}
+          title="iOS wallpaper setup"
+          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+            />
+          </svg>
+        </button>
       </div>
+
+      {/* Mobile Setup Modal */}
+      <MobileSetupModal
+        isOpen={showMobileModal}
+        onClose={() => setShowMobileModal(false)}
+        birthDate={birthDate}
+        baseUrl={typeof window !== 'undefined' ? window.location.origin : ''}
+      />
     </div>
   )
 }
