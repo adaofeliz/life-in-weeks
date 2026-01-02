@@ -2,7 +2,7 @@
 
 A beautiful visual representation of a 90-year human life where each box is one week. Inspired by Tim Urban's famous [Wait But Why](https://waitbutwhy.com/2014/05/life-weeks.html) post.
 
-![Life in Weeks Preview](https://raw.githubusercontent.com/adaofeliz/life-in-weeks/refs/heads/main/docs/images/life-in-weeks-preview.png)
+![Life in Weeks Preview](https://raw.githubusercontent.com/adaofeliz/life-in-weeks/refs/heads/main/docs/images/life-in-weeks-preview-20260102.png)
 
 ## Features
 
