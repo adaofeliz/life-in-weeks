@@ -2,7 +2,7 @@
 
 A beautiful visual representation of a 90-year human life where each box is one week. Inspired by Tim Urban's famous [Wait But Why](https://waitbutwhy.com/2014/05/life-weeks.html) post.
 
-![Life in Weeks Preview](https://i.imgur.com/placeholder.png)
+![Life in Weeks Preview](https://raw.githubusercontent.com/adaofeliz/life-in-weeks/refs/heads/main/docs/images/life-in-weeks-preview.png)
 
 ## Features
 
@@ -42,7 +42,7 @@ npm start
 
 The easiest way to deploy this app is with [Vercel](https://vercel.com):
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/life-in-weeks)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/adaofeliz/life-in-weeks)
 
 Or deploy manually:
 
