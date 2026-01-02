@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Crimson_Pro, JetBrains_Mono } from 'next/font/google'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 const crimsonPro = Crimson_Pro({
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="en" className={`${crimsonPro.variable} ${jetbrainsMono.variable}`}>
       <body className="antialiased">
         {children}
+        <SpeedInsights />
       </body>
     </html>
   )
