@@ -1,6 +1,18 @@
 'use client'
 
 import { useRef, useEffect, useCallback, useState } from 'react'
+import {
+  TOTAL_YEARS,
+  WEEKS_PER_YEAR,
+  TOTAL_WEEKS,
+  colors,
+  calculateWeeksLived,
+  calculateGridLayout,
+  getWeekColor,
+} from '@/lib/life-in-weeks'
+
+// Re-export for backward compatibility with page.tsx
+export { calculateWeeksLived }
 
 interface LifeInWeeksCanvasProps {
   birthDate: Date
@@ -10,10 +22,6 @@ interface LifeInWeeksCanvasProps {
   height?: number
 }
 
-const TOTAL_YEARS = 90
-const WEEKS_PER_YEAR = 52
-const TOTAL_WEEKS = TOTAL_YEARS * WEEKS_PER_YEAR
-
 const SIZE_PRESETS = [
   { name: 'iPhone Pro Max', width: 1320, height: 2868 },
   { name: 'iPhone Pro', width: 1218, height: 2634 },
@@ -22,12 +30,8 @@ const SIZE_PRESETS = [
   { name: 'iPhone SE', width: 750, height: 1334 }
 ]
 
-export function calculateWeeksLived(birthDate: Date): number {
-  const today = new Date()
-  const msPerWeek = 7 * 24 * 60 * 60 * 1000
-  const weeksLived = Math.floor((today.getTime() - birthDate.getTime()) / msPerWeek)
-  return Math.min(Math.max(0, weeksLived), TOTAL_WEEKS)
-}
+// Canvas-specific top space ratio (smaller than API image for title/subtitle)
+const CANVAS_TOP_SPACE_RATIO = 0.08
 
 export function LifeInWeeksCanvas({
   birthDate,
@@ -71,44 +75,24 @@ export function LifeInWeeksCanvas({
     ctx.scale(dpr, dpr)
 
     // Clear canvas
-    ctx.fillStyle = '#faf8f5'
+    ctx.fillStyle = colors.background
     ctx.fillRect(0, 0, displayWidth, displayHeight)
 
-    const cols = WEEKS_PER_YEAR
-    const rows = TOTAL_YEARS
-
-    // Padding
-    const paddingX = displayWidth * 0.06
-    const paddingY = displayHeight * 0.04
-    const topSpace = displayHeight * 0.08
-
-    const availableWidth = displayWidth - 2 * paddingX
-    const availableHeight = displayHeight - paddingY - topSpace
-
-    const cellWidth = availableWidth / cols
-    const cellHeight = availableHeight / rows
-    const cellSize = Math.min(cellWidth, cellHeight)
-
-    const spacingRatio = 0.18
-    const boxSize = cellSize * (1 - spacingRatio)
-
-    const gridWidth = cols * cellSize
-    const gridHeight = rows * cellSize
-
-    const startX = (displayWidth - gridWidth) / 2
-    const startY = topSpace
+    // Calculate grid layout using shared function
+    const layout = calculateGridLayout(displayWidth, displayHeight, CANVAS_TOP_SPACE_RATIO)
+    const { startX, startY, cellSize, boxSize, borderRadius, topSpace } = layout
 
     // Store grid info for hover detection
     gridInfoRef.current = { startX, startY, cellSize, boxSize }
 
     // Draw title
-    ctx.fillStyle = '#1a1a1a'
+    ctx.fillStyle = colors.textPrimary
     ctx.font = `600 ${Math.max(16, displayHeight * 0.022)}px var(--font-crimson), Georgia, serif`
     ctx.textAlign = 'center'
     ctx.fillText('YOUR LIFE IN WEEKS', displayWidth / 2, topSpace * 0.4)
 
     // Draw subtitle
-    ctx.fillStyle = '#6b6560'
+    ctx.fillStyle = colors.textSecondary
     ctx.font = `${Math.max(11, displayHeight * 0.013)}px var(--font-mono), monospace`
     const formattedDate = birthDate.toLocaleDateString('en-US', {
       month: 'long',
@@ -122,35 +106,38 @@ export function LifeInWeeksCanvas({
     )
 
     // Draw grid
-    for (let year = 0; year < rows; year++) {
-      for (let week = 0; week < cols; week++) {
+    for (let year = 0; year < TOTAL_YEARS; year++) {
+      for (let week = 0; week < WEEKS_PER_YEAR; week++) {
         const weekNumber = year * WEEKS_PER_YEAR + week
 
         const x = startX + week * cellSize + (cellSize - boxSize) / 2
         const y = startY + year * cellSize + (cellSize - boxSize) / 2
 
         const isHovered = hoveredWeek?.year === year && hoveredWeek?.week === week
+        
+        // Use shared color logic, with custom colors if provided via props
+        const baseColor = getWeekColor(weekNumber, weeksLived, isHovered)
+        // Override with prop colors for lived/remaining (non-current, non-hovered)
         const isCurrentWeek = weekNumber === weeksLived
-
-        if (isCurrentWeek) {
-          // Current week - accent color (same as "Now")
-          ctx.fillStyle = '#c45d3a'
-        } else if (weekNumber < weeksLived) {
-          ctx.fillStyle = isHovered ? '#c45d3a' : livedColor
+        if (!isCurrentWeek && !isHovered) {
+          if (weekNumber < weeksLived) {
+            ctx.fillStyle = livedColor
+          } else {
+            ctx.fillStyle = remainingColor
+          }
         } else {
-          ctx.fillStyle = isHovered ? '#d4cfc8' : remainingColor
+          ctx.fillStyle = baseColor
         }
 
         // Draw rounded rectangle
-        const radius = Math.max(1, boxSize * 0.15)
         ctx.beginPath()
-        ctx.roundRect(x, y, boxSize, boxSize, radius)
+        ctx.roundRect(x, y, boxSize, boxSize, borderRadius)
         ctx.fill()
       }
     }
 
     // Draw year markers
-    ctx.fillStyle = '#a8a29e'
+    ctx.fillStyle = colors.textMuted
     ctx.font = `${Math.max(9, displayHeight * 0.01)}px var(--font-mono), monospace`
     ctx.textAlign = 'right'
 
@@ -162,7 +149,7 @@ export function LifeInWeeksCanvas({
     }
 
     // Draw "90" at the bottom
-    ctx.fillText('90', startX - 8, startY + rows * cellSize)
+    ctx.fillText('90', startX - 8, startY + TOTAL_YEARS * cellSize)
 
   }, [dimensions, weeksLived, livedColor, remainingColor, birthDate, hoveredWeek])
 

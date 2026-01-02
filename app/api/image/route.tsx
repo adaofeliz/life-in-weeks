@@ -1,17 +1,18 @@
 import { ImageResponse } from '@vercel/og'
+import {
+  TOTAL_YEARS,
+  WEEKS_PER_YEAR,
+  TOTAL_WEEKS,
+  colors,
+  calculateWeeksLived,
+  calculateGridLayout,
+  getWeekColor,
+} from '@/lib/life-in-weeks'
 
 export const runtime = 'edge'
 
-const TOTAL_YEARS = 90
-const WEEKS_PER_YEAR = 52
-const TOTAL_WEEKS = TOTAL_YEARS * WEEKS_PER_YEAR
-
-function calculateWeeksLived(birthDate: Date): number {
-  const today = new Date()
-  const msPerWeek = 7 * 24 * 60 * 60 * 1000
-  const weeksLived = Math.floor((today.getTime() - birthDate.getTime()) / msPerWeek)
-  return Math.min(Math.max(0, weeksLived), TOTAL_WEEKS)
-}
+// API image uses larger top space ratio (no title, just grid with subtitle below)
+const API_IMAGE_TOP_SPACE_RATIO = 0.25
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -32,40 +33,16 @@ export async function GET(request: Request) {
 
   const weeksPercentage = ((weeksLived / TOTAL_WEEKS) * 100).toFixed(2)
 
-  // Calculate grid dimensions
-  const paddingX = width * 0.06
-  const topSpace = height * 0.25
-  const paddingY = height * 0.04
-
-  const availableWidth = width - 2 * paddingX
-  const availableHeight = height - paddingY - topSpace
-
-  const cellWidth = availableWidth / WEEKS_PER_YEAR
-  const cellHeight = availableHeight / TOTAL_YEARS
-  const cellSize = Math.min(cellWidth, cellHeight)
-
-  const spacingRatio = 0.18
-  const boxSize = cellSize * (1 - spacingRatio)
-  const gap = cellSize - boxSize
-
-  const gridWidth = WEEKS_PER_YEAR * cellSize
-  const startX = (width - gridWidth) / 2
+  // Calculate grid layout using shared function
+  const layout = calculateGridLayout(width, height, API_IMAGE_TOP_SPACE_RATIO)
+  const { startX, topSpace, cellSize, boxSize, borderRadius, gridWidth } = layout
 
   // Generate week cells - wrap each box in a cell container to center it (matching canvas behavior)
   const weeks = []
   for (let year = 0; year < TOTAL_YEARS; year++) {
     for (let week = 0; week < WEEKS_PER_YEAR; week++) {
       const weekNumber = year * WEEKS_PER_YEAR + week
-      const isCurrentWeek = weekNumber === weeksLived
-
-      let color: string
-      if (isCurrentWeek) {
-        color = '#c45d3a'
-      } else if (weekNumber < weeksLived) {
-        color = '#1a1a1a'
-      } else {
-        color = '#e8e4df'
-      }
+      const color = getWeekColor(weekNumber, weeksLived)
 
       weeks.push(
         <div
@@ -84,7 +61,7 @@ export async function GET(request: Request) {
               width: boxSize,
               height: boxSize,
               backgroundColor: color,
-              borderRadius: Math.max(1, boxSize * 0.15),
+              borderRadius: borderRadius,
             }}
           />
         </div>
@@ -106,7 +83,7 @@ export async function GET(request: Request) {
           top: yPos - yearFontSize / 2,
           fontSize: yearFontSize,
           fontFamily: 'monospace',
-          color: '#a8a29e',
+          color: colors.textMuted,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
@@ -128,7 +105,7 @@ export async function GET(request: Request) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          backgroundColor: '#faf8f5',
+          backgroundColor: colors.background,
           position: 'relative',
         }}
       >
@@ -165,7 +142,7 @@ export async function GET(request: Request) {
             display: 'flex',
             marginTop: 15,
             fontSize: Math.max(11, height * 0.013),
-            color: '#6b6560',
+            color: colors.textSecondary,
             fontFamily: 'monospace',
           }}
         >

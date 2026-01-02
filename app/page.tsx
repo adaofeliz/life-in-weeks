@@ -310,7 +310,16 @@ function HomeContent() {
       <footer className="border-t border-[#d4cfc8] px-6 py-8">
         <div className="max-w-4xl mx-auto text-center text-sm text-[#a8a29e] font-mono">
           <p>
-            Made with care · Inspired by{' '}
+            Made with{' '}
+            <a
+              href="https://github.com/adaofeliz/life-in-weeks"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#6b6560] transition-colors"
+            >
+              care
+            </a>
+            {' '}· Inspired by{' '}
             <a
               href="https://waitbutwhy.com/2014/05/life-weeks.html"
               target="_blank"
