@@ -30,9 +30,11 @@ export async function GET(request: Request) {
 
   const weeksLived = calculateWeeksLived(birthDate)
 
+  const weeksPercentage = ((weeksLived / TOTAL_WEEKS) * 100).toFixed(2)
+
   // Calculate grid dimensions
   const paddingX = width * 0.06
-  const topSpace = height * 0.08
+  const topSpace = height * 0.25
   const paddingY = height * 0.04
 
   const availableWidth = width - 2 * paddingX
@@ -49,13 +51,7 @@ export async function GET(request: Request) {
   const gridWidth = WEEKS_PER_YEAR * cellSize
   const startX = (width - gridWidth) / 2
 
-  const formattedDate = birthDate.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-
-  // Generate week cells
+  // Generate week cells - wrap each box in a cell container to center it (matching canvas behavior)
   const weeks = []
   for (let year = 0; year < TOTAL_YEARS; year++) {
     for (let week = 0; week < WEEKS_PER_YEAR; week++) {
@@ -75,18 +71,29 @@ export async function GET(request: Request) {
         <div
           key={`${year}-${week}`}
           style={{
-            width: boxSize,
-            height: boxSize,
-            backgroundColor: color,
-            borderRadius: Math.max(1, boxSize * 0.15),
+            width: cellSize,
+            height: cellSize,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             flexShrink: 0,
           }}
-        />
+        >
+          <div
+            style={{
+              width: boxSize,
+              height: boxSize,
+              backgroundColor: color,
+              borderRadius: Math.max(1, boxSize * 0.15),
+            }}
+          />
+        </div>
       )
     }
   }
 
-  // Generate year markers
+  // Generate year markers (now boxes are centered in cells, so we use cellSize / 2)
+  const yearFontSize = Math.max(9, height * 0.01)
   const yearMarkers = []
   for (let year = 0; year <= TOTAL_YEARS; year += 10) {
     const yPos = topSpace + year * cellSize + (year < TOTAL_YEARS ? cellSize / 2 : 0)
@@ -96,13 +103,15 @@ export async function GET(request: Request) {
         style={{
           position: 'absolute',
           left: startX - 30,
-          top: yPos - 6,
-          fontSize: Math.max(9, height * 0.01),
+          top: yPos - yearFontSize / 2,
+          fontSize: yearFontSize,
           fontFamily: 'monospace',
           color: '#a8a29e',
           display: 'flex',
+          alignItems: 'center',
           justifyContent: 'flex-end',
           width: 20,
+          height: yearFontSize,
         }}
       >
         {year === TOTAL_YEARS ? '90' : String(year)}
@@ -123,32 +132,6 @@ export async function GET(request: Request) {
           position: 'relative',
         }}
       >
-        {/* Title */}
-        <div
-          style={{
-            display: 'flex',
-            marginTop: topSpace * 0.25,
-            fontSize: Math.max(16, height * 0.022),
-            fontWeight: 600,
-            color: '#1a1a1a',
-            fontFamily: 'Georgia, serif',
-          }}
-        >
-          YOUR LIFE IN WEEKS
-        </div>
-
-        {/* Subtitle */}
-        <div
-          style={{
-            display: 'flex',
-            marginTop: 8,
-            fontSize: Math.max(11, height * 0.013),
-            color: '#6b6560',
-            fontFamily: 'monospace',
-          }}
-        >
-          {`Born ${formattedDate} · ${weeksLived.toLocaleString()} of ${TOTAL_WEEKS.toLocaleString()} weeks`}
-        </div>
 
         {/* Year markers container */}
         <div
@@ -170,12 +153,25 @@ export async function GET(request: Request) {
             display: 'flex',
             flexWrap: 'wrap',
             width: gridWidth,
-            marginTop: topSpace * 0.35,
-            gap: gap,
+            marginTop: topSpace,
           }}
         >
           {weeks}
         </div>
+
+        {/* Subtitle */}
+        <div
+          style={{
+            display: 'flex',
+            marginTop: 35,
+            fontSize: Math.max(11, height * 0.013),
+            color: '#6b6560',
+            fontFamily: 'monospace',
+          }}
+        >
+          {`${weeksLived.toLocaleString()} of ${TOTAL_WEEKS.toLocaleString()} weeks · (${weeksPercentage}%)`}
+        </div>
+
       </div>
     ),
     {

@@ -15,11 +15,11 @@ const WEEKS_PER_YEAR = 52
 const TOTAL_WEEKS = TOTAL_YEARS * WEEKS_PER_YEAR
 
 const SIZE_PRESETS = [
-  { name: 'iPhone 15 Pro Max', width: 1290, height: 2796 },
-  { name: 'iPhone 15 Pro', width: 1179, height: 2556 },
-  { name: 'iPhone 15 / 14', width: 1170, height: 2532 },
-  { name: 'iPhone SE', width: 750, height: 1334 },
-  { name: 'iPhone 13 mini', width: 1080, height: 2340 },
+  { name: 'iPhone Pro Max', width: 1320, height: 2868 },
+  { name: 'iPhone Pro', width: 1218, height: 2634 },
+  { name: 'iPhone Plus / Air', width: 1290, height: 2796 },
+  { name: 'iPhone 14', width: 1170, height: 2532 },
+  { name: 'iPhone SE', width: 750, height: 1334 }
 ]
 
 export function calculateWeeksLived(birthDate: Date): number {
