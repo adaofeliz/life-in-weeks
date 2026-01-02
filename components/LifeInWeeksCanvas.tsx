@@ -118,8 +118,12 @@ export function LifeInWeeksCanvas({
         const y = startY + year * cellSize + (cellSize - boxSize) / 2
 
         const isHovered = hoveredWeek?.year === year && hoveredWeek?.week === week
+        const isCurrentWeek = weekNumber === weeksLived
 
-        if (weekNumber < weeksLived) {
+        if (isCurrentWeek) {
+          // Current week - accent color (same as "Now")
+          ctx.fillStyle = '#c45d3a'
+        } else if (weekNumber < weeksLived) {
           ctx.fillStyle = isHovered ? '#c45d3a' : livedColor
         } else {
           ctx.fillStyle = isHovered ? '#d4cfc8' : remainingColor
@@ -213,16 +217,30 @@ export function LifeInWeeksCanvas({
         className="cursor-crosshair mx-auto block"
         style={{ maxWidth: '100%' }}
       />
-      {hoveredWeek && (
-        <div className="text-center mt-4 font-mono text-sm text-[#6b6560]">
-          Year {hoveredWeek.year + 1}, Week {hoveredWeek.week + 1}
-          {hoveredWeek.year * WEEKS_PER_YEAR + hoveredWeek.week < weeksLived ? (
-            <span className="ml-2 text-[#1a1a1a]">• Lived</span>
-          ) : (
-            <span className="ml-2 text-[#c45d3a]">• Ahead</span>
-          )}
-        </div>
-      )}
+      {(() => {
+        // Calculate current week position (the week being lived right now)
+        const currentYear = Math.floor(weeksLived / WEEKS_PER_YEAR)
+        const currentWeek = weeksLived % WEEKS_PER_YEAR
+        
+        // Use hovered week if hovering, otherwise show current week
+        const displayYear = hoveredWeek?.year ?? currentYear
+        const displayWeek = hoveredWeek?.week ?? currentWeek
+        const weekNumber = displayYear * WEEKS_PER_YEAR + displayWeek
+        const isCurrentWeek = !hoveredWeek
+        
+        return (
+          <div className="text-center mt-4 font-mono text-sm text-[#6b6560]">
+            Year {displayYear + 1}, Week {displayWeek + 1}
+            {weekNumber < weeksLived ? (
+              <span className="ml-2 text-[#1a1a1a]">• Lived</span>
+            ) : weekNumber === weeksLived ? (
+              <span className="ml-2 text-[#c45d3a]">• Now{isCurrentWeek ? '' : ' (current)'}</span>
+            ) : (
+              <span className="ml-2 text-[#a8a29e]">• Ahead</span>
+            )}
+          </div>
+        )
+      })()}
       <div className="text-center mt-6">
         <button
           onClick={downloadImage}
