@@ -9,6 +9,7 @@ import {
   calculateWeeksLived,
   calculateGridLayout,
   getWeekColor,
+  getFadedWeekColor,
 } from '@/lib/life-in-weeks'
 import { MobileSetupModal } from './MobileSetupModal'
 
@@ -112,7 +113,8 @@ export function LifeInWeeksCanvas({
         const isCurrentWeek = weekNumber === weeksLived
         if (!isCurrentWeek && !isHovered) {
           if (weekNumber < weeksLived) {
-            ctx.fillStyle = livedColor
+            // Apply fading effect for older weeks (past 10 years fade toward background)
+            ctx.fillStyle = getFadedWeekColor(weekNumber, weeksLived, livedColor, colors.background)
           } else {
             ctx.fillStyle = remainingColor
           }

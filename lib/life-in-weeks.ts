@@ -116,3 +116,101 @@ export function getWeekColor(
     return isHovered ? colors.hoveredRemaining : colors.remaining
   }
 }
+
+// Fading constants
+const FADE_START_YEARS = 10 // Years ago when fading starts
+const FADE_START_WEEKS = FADE_START_YEARS * WEEKS_PER_YEAR
+const MIN_OPACITY = 0.15 // Minimum opacity for oldest weeks
+
+/**
+ * Calculate fade opacity for a lived week based on how long ago it was.
+ * Weeks within the last 10 years are fully opaque.
+ * Older weeks gradually fade toward the background.
+ */
+export function getFadeOpacity(weekNumber: number, weeksLived: number): number {
+  // Only apply fading to past weeks
+  if (weekNumber >= weeksLived) {
+    return 1.0
+  }
+
+  const weeksAgo = weeksLived - weekNumber
+
+  // No fading for recent weeks (last 10 years)
+  if (weeksAgo <= FADE_START_WEEKS) {
+    return 1.0
+  }
+
+  // Calculate how far past the fade threshold we are
+  const weeksIntoFade = weeksAgo - FADE_START_WEEKS
+  const maxFadeWeeks = weeksLived - FADE_START_WEEKS // Total weeks that can fade
+
+  if (maxFadeWeeks <= 0) {
+    return 1.0
+  }
+
+  // Smooth easing: use square root for a gentle fade curve
+  const fadeProgress = Math.min(weeksIntoFade / maxFadeWeeks, 1.0)
+  const easedProgress = Math.sqrt(fadeProgress)
+
+  // Interpolate from 1.0 to MIN_OPACITY
+  return 1.0 - easedProgress * (1.0 - MIN_OPACITY)
+}
+
+/**
+ * Parse a hex color string to RGB values
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!result) {
+    return { r: 0, g: 0, b: 0 }
+  }
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
+  }
+}
+
+/**
+ * Convert RGB values to hex color string
+ */
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (n: number) => {
+    const hex = Math.round(Math.max(0, Math.min(255, n))).toString(16)
+    return hex.length === 1 ? '0' + hex : hex
+  }
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+/**
+ * Blend two colors together based on opacity.
+ * At opacity 1.0, returns foreground color.
+ * At opacity 0.0, returns background color.
+ */
+export function blendColors(
+  foreground: string,
+  background: string,
+  opacity: number
+): string {
+  const fg = hexToRgb(foreground)
+  const bg = hexToRgb(background)
+
+  const r = fg.r * opacity + bg.r * (1 - opacity)
+  const g = fg.g * opacity + bg.g * (1 - opacity)
+  const b = fg.b * opacity + bg.b * (1 - opacity)
+
+  return rgbToHex(r, g, b)
+}
+
+/**
+ * Get the faded color for a lived week, blending toward background based on age.
+ */
+export function getFadedWeekColor(
+  weekNumber: number,
+  weeksLived: number,
+  livedColor: string = colors.lived,
+  backgroundColor: string = colors.background
+): string {
+  const opacity = getFadeOpacity(weekNumber, weeksLived)
+  return blendColors(livedColor, backgroundColor, opacity)
+}

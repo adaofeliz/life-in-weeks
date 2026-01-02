@@ -6,7 +6,7 @@ import {
   colors,
   calculateWeeksLived,
   calculateGridLayout,
-  getWeekColor,
+  getFadedWeekColor,
 } from '@/lib/life-in-weeks'
 
 // API image uses larger top space ratio (no title, just grid with subtitle below)
@@ -45,7 +45,18 @@ export async function GET(request: Request) {
   for (let year = 0; year < TOTAL_YEARS; year++) {
     for (let week = 0; week < WEEKS_PER_YEAR; week++) {
       const weekNumber = year * WEEKS_PER_YEAR + week
-      const color = getWeekColor(weekNumber, weeksLived)
+      const isCurrentWeek = weekNumber === weeksLived
+      const isLived = weekNumber < weeksLived
+      
+      // Get color - apply fading for lived weeks older than 10 years
+      let color: string
+      if (isCurrentWeek) {
+        color = colors.current
+      } else if (isLived) {
+        color = getFadedWeekColor(weekNumber, weeksLived, colors.lived, colors.background)
+      } else {
+        color = colors.remaining
+      }
 
       weeks.push(
         <div
