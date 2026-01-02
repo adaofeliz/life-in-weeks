@@ -29,7 +29,12 @@ export async function GET(request: Request) {
 
   const weeksLived = calculateWeeksLived(birthDate)
 
-  const weeksPercentage = ((weeksLived / TOTAL_WEEKS) * 100).toFixed(2)
+  // Calculate days-based percentage for more granular daily progress
+  const now = new Date()
+  const msPerDay = 1000 * 60 * 60 * 24
+  const daysLived = Math.floor((now.getTime() - birthDate.getTime()) / msPerDay)
+  const totalDays = TOTAL_YEARS * 365.25 // Account for leap years
+  const daysPercentage = ((daysLived / totalDays) * 100).toFixed(3)
 
   // Calculate grid layout using shared function
   const layout = calculateGridLayout(width, height, API_IMAGE_TOP_SPACE_RATIO)
@@ -144,7 +149,7 @@ export async function GET(request: Request) {
             fontFamily: 'monospace',
           }}
         >
-          {`${weeksLived.toLocaleString()} of ${TOTAL_WEEKS.toLocaleString()} weeks · (${weeksPercentage}%)`}
+          {`${weeksLived.toLocaleString()} of ${TOTAL_WEEKS.toLocaleString()} weeks · (${daysPercentage}%)`}
         </div>
 
       </div>
