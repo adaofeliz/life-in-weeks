@@ -9,8 +9,6 @@ import {
   getWeekColor,
 } from '@/lib/life-in-weeks'
 
-export const runtime = 'edge'
-
 // API image uses larger top space ratio (no title, just grid with subtitle below)
 const API_IMAGE_TOP_SPACE_RATIO = 0.25
 
