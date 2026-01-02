@@ -2,11 +2,12 @@ import { ImageResponse } from '@vercel/og'
 import {
   TOTAL_YEARS,
   WEEKS_PER_YEAR,
-  TOTAL_WEEKS,
   colors,
-  calculateWeeksLived,
   calculateGridLayout,
   getFadedWeekColor,
+  parseBirthDate,
+  validateBirthDate,
+  calculateLifeStats,
 } from '@/lib/life-in-weeks'
 
 // API image uses larger top space ratio (no title, just grid with subtitle below)
@@ -22,19 +23,15 @@ export async function GET(request: Request) {
     return new Response('Missing birthDate parameter', { status: 400 })
   }
 
-  const birthDate = new Date(birthDateParam + 'T00:00:00')
-  if (isNaN(birthDate.getTime())) {
-    return new Response('Invalid birthDate format', { status: 400 })
+  const birthDate = parseBirthDate(birthDateParam)
+  const validation = validateBirthDate(birthDate)
+
+  if (!validation.valid) {
+    return new Response(validation.error, { status: 400 })
   }
 
-  const weeksLived = calculateWeeksLived(birthDate)
-
-  // Calculate days-based percentage for more granular daily progress
-  const now = new Date()
-  const msPerDay = 1000 * 60 * 60 * 24
-  const daysLived = Math.floor((now.getTime() - birthDate.getTime()) / msPerDay)
-  const totalDays = TOTAL_YEARS * 365.25 // Account for leap years
-  const daysPercentage = ((daysLived / totalDays) * 100).toFixed(3)
+  const stats = calculateLifeStats(birthDate)
+  const daysPercentage = ((stats.daysLived / (TOTAL_YEARS * 365.25)) * 100).toFixed(3)
 
   // Calculate grid layout using shared function
   const layout = calculateGridLayout(width, height, API_IMAGE_TOP_SPACE_RATIO)
@@ -45,15 +42,15 @@ export async function GET(request: Request) {
   for (let year = 0; year < TOTAL_YEARS; year++) {
     for (let week = 0; week < WEEKS_PER_YEAR; week++) {
       const weekNumber = year * WEEKS_PER_YEAR + week
-      const isCurrentWeek = weekNumber === weeksLived
-      const isLived = weekNumber < weeksLived
+      const isCurrentWeek = weekNumber === stats.weeksLived
+      const isLived = weekNumber < stats.weeksLived
       
       // Get color - apply fading for lived weeks older than 10 years
       let color: string
       if (isCurrentWeek) {
         color = colors.current
       } else if (isLived) {
-        color = getFadedWeekColor(weekNumber, weeksLived, colors.lived, colors.background)
+        color = getFadedWeekColor(weekNumber, stats.weeksLived, colors.lived, colors.background)
       } else {
         color = colors.remaining
       }
@@ -160,7 +157,7 @@ export async function GET(request: Request) {
             fontFamily: 'monospace',
           }}
         >
-          {`${weeksLived.toLocaleString()} of ${TOTAL_WEEKS.toLocaleString()} weeks · (${daysPercentage}%)`}
+          {` ${stats.daysLived.toLocaleString()} days · ${stats.weeksLived.toLocaleString()} weeks · ${stats.yearsLived.toFixed(1)} years · ${daysPercentage}%`}
         </div>
 
       </div>

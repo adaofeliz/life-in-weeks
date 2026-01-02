@@ -13,9 +13,6 @@ import {
 } from '@/lib/life-in-weeks'
 import { MobileSetupModal } from './MobileSetupModal'
 
-// Re-export for backward compatibility with page.tsx
-export { calculateWeeksLived }
-
 interface LifeInWeeksCanvasProps {
   birthDate: Date
   livedColor?: string

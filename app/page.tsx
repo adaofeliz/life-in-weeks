@@ -2,41 +2,19 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { LifeInWeeksCanvas, calculateWeeksLived } from '@/components/LifeInWeeksCanvas'
-
-const TOTAL_WEEKS = 90 * 52
-
-interface Stats {
-  weeksLived: number
-  weeksRemaining: number
-  percentageLived: number
-  yearsLived: number
-  daysLived: number
-}
-
-function calculateStats(birthDate: Date): Stats {
-  const today = new Date()
-  const msPerDay = 24 * 60 * 60 * 1000
-  const daysLived = Math.floor((today.getTime() - birthDate.getTime()) / msPerDay)
-  const weeksLived = calculateWeeksLived(birthDate)
-  const weeksRemaining = Math.max(0, TOTAL_WEEKS - weeksLived)
-  const yearsLived = daysLived / 365.25
-  const percentageLived = (weeksLived / TOTAL_WEEKS) * 100
-
-  return {
-    weeksLived,
-    weeksRemaining,
-    percentageLived,
-    yearsLived,
-    daysLived,
-  }
-}
+import { LifeInWeeksCanvas } from '@/components/LifeInWeeksCanvas'
+import {
+  parseBirthDate,
+  validateBirthDate,
+  calculateLifeStats,
+  type LifeStats,
+} from '@/lib/life-in-weeks'
 
 function HomeContent() {
   const searchParams = useSearchParams()
   const [birthDateInput, setBirthDateInput] = useState('')
   const [birthDate, setBirthDate] = useState<Date | null>(null)
-  const [stats, setStats] = useState<Stats | null>(null)
+  const [stats, setStats] = useState<LifeStats | null>(null)
   const [error, setError] = useState('')
   const [isVisible, setIsVisible] = useState(false)
 
@@ -48,16 +26,13 @@ function HomeContent() {
   useEffect(() => {
     const birthDateParam = searchParams.get('birthDate')
     if (birthDateParam) {
-      const date = new Date(birthDateParam + 'T00:00:00')
-      const today = new Date()
+      const date = parseBirthDate(birthDateParam)
+      const validation = validateBirthDate(date)
 
-      if (!isNaN(date.getTime()) && date <= today) {
-        const yearsAgo = (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-        if (yearsAgo <= 90) {
-          setBirthDateInput(birthDateParam)
-          setBirthDate(date)
-          setStats(calculateStats(date))
-        }
+      if (validation.valid) {
+        setBirthDateInput(birthDateParam)
+        setBirthDate(date)
+        setStats(calculateLifeStats(date))
       }
     }
   }, [searchParams])
@@ -71,27 +46,16 @@ function HomeContent() {
       return
     }
 
-    const date = new Date(birthDateInput + 'T00:00:00')
-    const today = new Date()
+    const date = parseBirthDate(birthDateInput)
+    const validation = validateBirthDate(date)
 
-    if (isNaN(date.getTime())) {
-      setError('Invalid date format')
-      return
-    }
-
-    if (date > today) {
-      setError('Birth date must be in the past')
-      return
-    }
-
-    const yearsAgo = (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-    if (yearsAgo > 90) {
-      setError('Birth date cannot be more than 90 years ago')
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid date')
       return
     }
 
     setBirthDate(date)
-    setStats(calculateStats(date))
+    setStats(calculateLifeStats(date))
   }
 
   return (

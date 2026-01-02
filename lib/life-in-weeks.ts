@@ -214,3 +214,88 @@ export function getFadedWeekColor(
   const opacity = getFadeOpacity(weekNumber, weeksLived)
   return blendColors(livedColor, backgroundColor, opacity)
 }
+
+// ============================================================================
+// Date parsing and validation utilities
+// ============================================================================
+
+/**
+ * Parse a birth date string (YYYY-MM-DD) to a Date object.
+ * Uses midnight local time to avoid timezone issues.
+ */
+export function parseBirthDate(dateStr: string): Date {
+  return new Date(dateStr + 'T00:00:00')
+}
+
+/**
+ * Validation result for birth date
+ */
+export interface ValidationResult {
+  valid: boolean
+  error?: string
+}
+
+/**
+ * Validate a birth date.
+ * Checks: valid date, not in future, not more than 90 years ago.
+ */
+export function validateBirthDate(date: Date): ValidationResult {
+  if (isNaN(date.getTime())) {
+    return { valid: false, error: 'Invalid date format' }
+  }
+
+  const today = new Date()
+
+  if (date > today) {
+    return { valid: false, error: 'Birth date must be in the past' }
+  }
+
+  const yearsAgo = (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+  if (yearsAgo > TOTAL_YEARS) {
+    return { valid: false, error: `Birth date cannot be more than ${TOTAL_YEARS} years ago` }
+  }
+
+  return { valid: true }
+}
+
+// ============================================================================
+// Life statistics calculation
+// ============================================================================
+
+/**
+ * Complete life statistics based on birth date
+ */
+export interface LifeStats {
+  weeksLived: number
+  weeksRemaining: number
+  daysLived: number
+  daysRemaining: number
+  yearsLived: number
+  percentageLived: number
+}
+
+/**
+ * Calculate all life statistics from a birth date.
+ * Single source of truth for all stats calculations.
+ */
+export function calculateLifeStats(birthDate: Date): LifeStats {
+  const today = new Date()
+  const msPerDay = 24 * 60 * 60 * 1000
+
+  const daysLived = Math.floor((today.getTime() - birthDate.getTime()) / msPerDay)
+  const weeksLived = calculateWeeksLived(birthDate)
+  const weeksRemaining = Math.max(0, TOTAL_WEEKS - weeksLived)
+  const totalDays = Math.round(TOTAL_YEARS * 365.25)
+  const daysRemaining = Math.max(0, totalDays - daysLived)
+  const yearsLived = daysLived / 365.25
+  const percentageLived = (weeksLived / TOTAL_WEEKS) * 100
+
+  return {
+    weeksLived,
+    weeksRemaining,
+    daysLived,
+    daysRemaining,
+    yearsLived,
+    percentageLived,
+  }
+}
