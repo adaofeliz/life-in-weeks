@@ -12,6 +12,8 @@ export { getServerColors } from './colors'
 export const PADDING_X_RATIO = 0.06
 export const PADDING_Y_RATIO = 0.04
 export const SPACING_RATIO = 0.18
+export const MIN_GAP_SIZE = 1.5  // Minimum gap in pixels
+export const MAX_GAP_SIZE = 3    // Maximum gap in pixels
 
 /**
  * Calculate the number of weeks lived from birth date to today
@@ -65,7 +67,10 @@ export function calculateGridLayout(
   const cellHeight = availableHeight / TOTAL_YEARS
   const cellSize = Math.min(cellWidth, cellHeight)
 
-  const boxSize = cellSize * (1 - SPACING_RATIO)
+  // Calculate proportional gap, then clamp to bounds
+  const proportionalGap = cellSize * SPACING_RATIO
+  const gap = Math.min(MAX_GAP_SIZE, Math.max(MIN_GAP_SIZE, proportionalGap))
+  const boxSize = cellSize - gap
   const borderRadius = Math.max(1, boxSize * 0.15)
 
   const gridWidth = WEEKS_PER_YEAR * cellSize
