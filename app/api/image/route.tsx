@@ -39,11 +39,12 @@ export async function GET(request: Request) {
 
   // Calculate grid layout using shared function
   const layout = calculateGridLayout(width, height, API_IMAGE_TOP_SPACE_RATIO)
-  const { startX, topSpace, cellSize, boxSize, borderRadius, gridWidth } = layout
+  const { startX, topSpace, cellSize, boxSize, borderRadius } = layout
 
-  // Generate week cells - wrap each box in a cell container to center it (matching canvas behavior)
-  const weeks = []
+  // Generate rows with exactly 52 week cells each (no flex-wrap, explicit row containers)
+  const rows = []
   for (let year = 0; year < TOTAL_YEARS; year++) {
+    const weekCells = []
     for (let week = 0; week < WEEKS_PER_YEAR; week++) {
       const weekNumber = year * WEEKS_PER_YEAR + week
       const isCurrentWeek = weekNumber === stats.weeksLived
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
         color = colors.remaining
       }
 
-      weeks.push(
+      weekCells.push(
         <div
           key={`${year}-${week}`}
           style={{
@@ -68,7 +69,6 @@ export async function GET(request: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flexShrink: 0,
           }}
         >
           <div
@@ -82,6 +82,19 @@ export async function GET(request: Request) {
         </div>
       )
     }
+    
+    // Each row is a flex container with exactly 52 weeks
+    rows.push(
+      <div
+        key={`year-${year}`}
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+        }}
+      >
+        {weekCells}
+      </div>
+    )
   }
 
   // Generate year markers (now boxes are centered in cells, so we use cellSize / 2)
@@ -139,16 +152,15 @@ export async function GET(request: Request) {
           {yearMarkers}
         </div>
 
-        {/* Grid */}
+        {/* Grid - explicit row containers to enforce exactly 52 weeks per row */}
         <div
           style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            width: gridWidth,
+            flexDirection: 'column',
             marginTop: topSpace,
           }}
         >
-          {weeks}
+          {rows}
         </div>
 
         {/* Subtitle */}
