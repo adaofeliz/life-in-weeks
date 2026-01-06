@@ -4,12 +4,12 @@ import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHand
 import {
   TOTAL_YEARS,
   WEEKS_PER_YEAR,
-  colors,
   calculateWeeksLived,
   calculateGridLayout,
   getWeekColor,
   getFadedWeekColor,
 } from '@/lib/life-in-weeks'
+import { useThemeColors } from '@/lib/use-theme-colors'
 import { MobileSetupModal } from './MobileSetupModal'
 import { CopyIcon, CheckIcon, DownloadIcon, PhoneIcon, MonitorIcon } from './Icons'
 
@@ -50,6 +50,7 @@ export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCan
     boxSize: number
   } | null>(null)
 
+  const colors = useThemeColors()
   const weeksLived = calculateWeeksLived(birthDate)
 
   const drawGrid = useCallback(() => {
@@ -97,7 +98,7 @@ export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCan
         const isHovered = hoveredWeek?.year === year && hoveredWeek?.week === week
         
         // Use shared color logic
-        const baseColor = getWeekColor(weekNumber, weeksLived, isHovered)
+        const baseColor = getWeekColor(weekNumber, weeksLived, colors, isHovered)
         const isCurrentWeek = weekNumber === weeksLived
         
         if (!isCurrentWeek && !isHovered) {
@@ -133,7 +134,7 @@ export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCan
     // Draw "90" at the bottom
     ctx.fillText('90', startX - 8, startY + TOTAL_YEARS * cellSize)
 
-  }, [dimensions, weeksLived, birthDate, hoveredWeek])
+  }, [dimensions, weeksLived, birthDate, hoveredWeek, colors])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
@@ -224,14 +225,14 @@ export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCan
   return (
     <div ref={containerRef} className="w-full">
       {/* Week indicator - centered between border and canvas */}
-      <div className="text-center mt-4 mb-4 font-mono text-sm text-[#6b6560]">
+      <div className="text-center mt-4 mb-4 font-mono text-sm text-[var(--color-text-secondary)]">
         Year {displayYear}, Week {displayWeek + 1}
         {weekNumber < weeksLived ? (
-          <span className="ml-2 text-[#1a1a1a]">• Lived</span>
+          <span className="ml-2 text-[var(--color-text)]">• Lived</span>
         ) : weekNumber === weeksLived ? (
-          <span className="ml-2 text-[#c45d3a]">• Now{isCurrentWeekDisplay ? '' : ' (current)'}</span>
+          <span className="ml-2 text-[var(--color-accent)]">• Now{isCurrentWeekDisplay ? '' : ' (current)'}</span>
         ) : (
-          <span className="ml-2 text-[#a8a29e]">• Ahead</span>
+          <span className="ml-2 text-[var(--color-text-muted)]">• Ahead</span>
         )}
       </div>
 
@@ -241,7 +242,7 @@ export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCan
           <button
             onClick={copyLink}
             title="Copy link"
-            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+            className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
           >
             {copied ? (
               <CheckIcon className="w-5 h-5 text-green-400" />
@@ -252,14 +253,14 @@ export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCan
           <button
             onClick={downloadImage}
             title="Download PNG"
-            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+            className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
           >
             <DownloadIcon />
           </button>
           <button
             onClick={openMobileModal}
             title="iOS wallpaper setup"
-            className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+            className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
           >
             <PhoneIcon />
           </button>
@@ -267,7 +268,7 @@ export const LifeInWeeksCanvas = forwardRef<LifeInWeeksCanvasRef, LifeInWeeksCan
             <button
               onClick={onWallpaperMode}
               title="Web wallpaper mode"
-              className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+              className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
             >
               <MonitorIcon />
             </button>
@@ -315,7 +316,7 @@ export function LifeInWeeksControls({ canvasRef, onWallpaperMode }: LifeInWeeksC
       <button
         onClick={handleCopyLink}
         title="Copy link"
-        className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
       >
         {copied ? (
           <CheckIcon className="w-5 h-5 text-green-400" />
@@ -326,14 +327,14 @@ export function LifeInWeeksControls({ canvasRef, onWallpaperMode }: LifeInWeeksC
       <button
         onClick={() => canvasRef.current?.downloadImage()}
         title="Download PNG"
-        className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
       >
         <DownloadIcon />
       </button>
       <button
         onClick={() => canvasRef.current?.openMobileModal()}
         title="iOS wallpaper setup"
-        className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+        className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
       >
         <PhoneIcon />
       </button>
@@ -341,7 +342,7 @@ export function LifeInWeeksControls({ canvasRef, onWallpaperMode }: LifeInWeeksC
         <button
           onClick={onWallpaperMode}
           title="Web wallpaper mode"
-          className="p-3 bg-[#1a1a1a] text-white hover:bg-[#333] transition-colors"
+          className="p-3 bg-[var(--color-lived)] text-[var(--color-bg)] hover:opacity-80 transition-opacity"
         >
           <MonitorIcon />
         </button>

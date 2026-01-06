@@ -2,7 +2,7 @@ import { ImageResponse } from '@vercel/og'
 import {
   TOTAL_YEARS,
   WEEKS_PER_YEAR,
-  colors,
+  getServerColors,
   calculateGridLayout,
   getFadedWeekColor,
   parseBirthDate,
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   const birthDateParam = searchParams.get('birthDate')
   const width = parseInt(searchParams.get('width') || '1170')
   const height = parseInt(searchParams.get('height') || '2532')
+  const isDark = searchParams.get('dark') === 'true'
 
   if (!birthDateParam) {
     return new Response('Missing birthDate parameter', { status: 400 })
@@ -29,6 +30,9 @@ export async function GET(request: Request) {
   if (!validation.valid) {
     return new Response(validation.error, { status: 400 })
   }
+
+  // Get theme-appropriate colors (server-side)
+  const colors = getServerColors(isDark)
 
   const stats = calculateLifeStats(birthDate)
   const daysPercentage = ((stats.daysLived / (TOTAL_YEARS * 365.25)) * 100).toFixed(3)

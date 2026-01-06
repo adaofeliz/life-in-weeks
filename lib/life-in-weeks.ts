@@ -4,19 +4,9 @@ export const TOTAL_YEARS = 90
 export const WEEKS_PER_YEAR = 52
 export const TOTAL_WEEKS = TOTAL_YEARS * WEEKS_PER_YEAR
 
-// Color palette with semantic names
-export const colors = {
-  lived: '#1a1a1a',
-  remaining: '#e8e4df',
-  current: '#c45d3a',
-  background: '#faf8f5',
-  textPrimary: '#1a1a1a',
-  textSecondary: '#6b6560',
-  textMuted: '#a8a29e',
-  border: '#d4cfc8',
-  hoveredLived: '#c45d3a',
-  hoveredRemaining: '#d4cfc8',
-}
+// Re-export ColorPalette type and server-side colors from colors
+export type { ColorPalette } from './colors'
+export { getServerColors } from './colors'
 
 // Layout constants
 export const PADDING_X_RATIO = 0.06
@@ -104,6 +94,7 @@ export function calculateGridLayout(
 export function getWeekColor(
   weekNumber: number,
   weeksLived: number,
+  colors: { lived: string; remaining: string; current: string; hoveredLived: string; hoveredRemaining: string },
   isHovered: boolean = false
 ): string {
   const isCurrentWeek = weekNumber === weeksLived
@@ -208,8 +199,8 @@ export function blendColors(
 export function getFadedWeekColor(
   weekNumber: number,
   weeksLived: number,
-  livedColor: string = colors.lived,
-  backgroundColor: string = colors.background
+  livedColor: string,
+  backgroundColor: string
 ): string {
   const opacity = getFadeOpacity(weekNumber, weeksLived)
   return blendColors(livedColor, backgroundColor, opacity)

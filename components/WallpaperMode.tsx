@@ -4,12 +4,12 @@ import { useRef, useEffect, useCallback, useState } from 'react'
 import {
   TOTAL_YEARS,
   WEEKS_PER_YEAR,
-  colors,
   calculateWeeksLived,
   calculateGridLayout,
   getFadedWeekColor,
   calculateLifeStats,
 } from '@/lib/life-in-weeks'
+import { useThemeColors } from '@/lib/use-theme-colors'
 import { CloseIcon } from './Icons'
 
 interface WallpaperModeProps {
@@ -25,6 +25,8 @@ export function WallpaperMode({ birthDate, onExit }: WallpaperModeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
   const [stats, setStats] = useState(() => calculateLifeStats(birthDate))
+
+  const colors = useThemeColors()
 
   // Update stats every second for real-time counter
   useEffect(() => {
@@ -96,7 +98,7 @@ export function WallpaperMode({ birthDate, onExit }: WallpaperModeProps) {
       }
     }
     ctx.fillText('90', startX - 8, startY + TOTAL_YEARS * cellSize)
-  }, [dimensions, weeksLived])
+  }, [dimensions, weeksLived, colors])
 
   // Calculate dimensions based on viewport
   useEffect(() => {

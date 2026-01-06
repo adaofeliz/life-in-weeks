@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CopyIcon, CheckIcon, ChevronDownIcon } from './Icons'
+import { useTheme } from './ThemeProvider'
 
 const SIZE_PRESETS = [
   { name: 'iPhone 17 Pro Max', width: 1320, height: 2868 },
@@ -36,6 +37,8 @@ export function MobileSetupModal({ isOpen, onClose, birthDate, baseUrl }: Mobile
   const [day, setDay] = useState('')
   const [selectedModel, setSelectedModel] = useState(SIZE_PRESETS[0].name)
   const [copied, setCopied] = useState(false)
+  
+  const { isDark } = useTheme()
 
   // Pre-populate from birthDate prop
   useEffect(() => {
@@ -46,11 +49,12 @@ export function MobileSetupModal({ isOpen, onClose, birthDate, baseUrl }: Mobile
     }
   }, [birthDate])
 
-  // Generate the API URL
+  // Generate the API URL (includes dark param based on current theme)
   const selectedPreset = SIZE_PRESETS.find(p => p.name === selectedModel) || SIZE_PRESETS[0]
   const birthDateStr = year && month && day ? `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}` : ''
+  const darkParam = isDark ? '&dark=true' : ''
   const apiUrl = birthDateStr 
-    ? `${baseUrl}/api/image?birthDate=${birthDateStr}&width=${selectedPreset.width}&height=${selectedPreset.height}`
+    ? `${baseUrl}/api/image?birthDate=${birthDateStr}&width=${selectedPreset.width}&height=${selectedPreset.height}${darkParam}`
     : ''
 
   const copyUrl = async () => {
@@ -87,61 +91,61 @@ export function MobileSetupModal({ isOpen, onClose, birthDate, baseUrl }: Mobile
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-[#1a1a1a]/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[var(--color-lived)]/50 backdrop-blur-sm" />
       
       {/* Modal */}
-      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#faf8f5] border border-[#d4cfc8] shadow-2xl">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[var(--color-bg)] border border-[var(--color-border)] shadow-2xl">
         <div className="p-6 md:p-8">
           {/* Header */}
-          <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-2">
+          <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-2">
             iOS Wallpaper Setup
           </h2>
-          <p className="text-[#6b6560] text-sm mb-8 leading-relaxed">
+          <p className="text-[var(--color-text-secondary)] text-sm mb-8 leading-relaxed">
             Set up an iOS Shortcut automation to automatically update your lock screen wallpaper daily with your life-in-weeks visualization.
           </p>
 
           {/* Step 1: Define Wallpaper */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <span className="flex items-center justify-center w-7 h-7 bg-[#1a1a1a] text-white text-sm font-mono rounded">
+              <span className="flex items-center justify-center w-7 h-7 bg-[var(--color-lived)] text-[var(--color-bg)] text-sm font-mono rounded">
                 1
               </span>
-              <h3 className="text-[#1a1a1a] font-medium">Your Life in Weeks</h3>
+              <h3 className="text-[var(--color-text)] font-medium">Your Life in Weeks</h3>
             </div>
 
             {/* Birthday inputs */}
-            <label className="block text-[#6b6560] text-xs font-mono tracking-wide mb-2">YOUR BIRTHDAY</label>
+            <label className="block text-[var(--color-text-secondary)] text-xs font-mono tracking-wide mb-2">YOUR BIRTHDAY</label>
             <div className="grid grid-cols-3 gap-2 mb-4">
               <input
                 type="text"
                 placeholder="1987"
                 value={year}
                 onChange={(e) => setYear(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                className="bg-white border border-[#d4cfc8] text-[#1a1a1a] px-3 py-3 text-center font-mono focus:outline-none focus:border-[#1a1a1a] transition-colors"
+                className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-3 py-3 text-center font-mono focus:outline-none focus:border-[var(--color-text)] transition-colors"
               />
               <input
                 type="text"
                 placeholder="03"
                 value={month}
                 onChange={(e) => setMonth(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                className="bg-white border border-[#d4cfc8] text-[#1a1a1a] px-3 py-3 text-center font-mono focus:outline-none focus:border-[#1a1a1a] transition-colors"
+                className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-3 py-3 text-center font-mono focus:outline-none focus:border-[var(--color-text)] transition-colors"
               />
               <input
                 type="text"
                 placeholder="12"
                 value={day}
                 onChange={(e) => setDay(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                className="bg-white border border-[#d4cfc8] text-[#1a1a1a] px-3 py-3 text-center font-mono focus:outline-none focus:border-[#1a1a1a] transition-colors"
+                className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-3 py-3 text-center font-mono focus:outline-none focus:border-[var(--color-text)] transition-colors"
               />
             </div>
 
             {/* iPhone Model */}
-            <label className="block text-[#6b6560] text-xs font-mono tracking-wide mb-2">IPHONE MODEL</label>
+            <label className="block text-[var(--color-text-secondary)] text-xs font-mono tracking-wide mb-2">IPHONE MODEL</label>
             <div className="relative">
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="w-full bg-white border border-[#d4cfc8] text-[#1a1a1a] px-3 py-3 font-mono appearance-none focus:outline-none focus:border-[#1a1a1a] transition-colors cursor-pointer"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-3 py-3 font-mono appearance-none focus:outline-none focus:border-[var(--color-text)] transition-colors cursor-pointer"
               >
                 {SIZE_PRESETS.map((preset) => (
                   <option key={preset.name} value={preset.name}>
@@ -149,7 +153,7 @@ export function MobileSetupModal({ isOpen, onClose, birthDate, baseUrl }: Mobile
                   </option>
                 ))}
               </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6560] pointer-events-none">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] pointer-events-none">
                 <ChevronDownIcon />
               </div>
             </div>
@@ -158,64 +162,64 @@ export function MobileSetupModal({ isOpen, onClose, birthDate, baseUrl }: Mobile
           {/* Step 2: Create Automation */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <span className="flex items-center justify-center w-7 h-7 bg-[#1a1a1a] text-white text-sm font-mono rounded">
+              <span className="flex items-center justify-center w-7 h-7 bg-[var(--color-lived)] text-[var(--color-bg)] text-sm font-mono rounded">
                 2
               </span>
-              <h3 className="text-[#1a1a1a] font-medium">Shortcuts App</h3>
+              <h3 className="text-[var(--color-text)] font-medium">Shortcuts App</h3>
             </div>
 
-            <p className="text-[#6b6560] text-sm leading-relaxed">
-              Open <span className="underline">Shortcuts</span> app → Go to <span className="text-[#1a1a1a]">Automation</span> tab → New Automation → <span className="underline">Time of Day</span> → <span className="text-[#c45d3a]">00:00</span> → Repeat <span className="text-[#c45d3a]">&quot;Daily&quot;</span> → Select <span className="text-[#c45d3a]">&quot;Run Immediately&quot;</span> → <span className="text-[#c45d3a]">&quot;Next&quot;</span>
+            <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
+              Open <span className="underline">Shortcuts</span> app → Go to <span className="text-[var(--color-text)]">Automation</span> tab → New Automation → <span className="underline">Time of Day</span> → <span className="text-[var(--color-accent)]">00:00</span> → Repeat <span className="text-[var(--color-accent)]">&quot;Daily&quot;</span> → Select <span className="text-[var(--color-accent)]">&quot;Run Immediately&quot;</span> → <span className="text-[var(--color-accent)]">&quot;Next&quot;</span>
             </p>
           </div>
 
           {/* Step 3: Create Shortcut */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-4">
-              <span className="flex items-center justify-center w-7 h-7 bg-[#1a1a1a] text-white text-sm font-mono rounded">
+              <span className="flex items-center justify-center w-7 h-7 bg-[var(--color-lived)] text-[var(--color-bg)] text-sm font-mono rounded">
                 3
               </span>
-              <h3 className="text-[#1a1a1a] font-medium">Create New Shortcut</h3>
+              <h3 className="text-[var(--color-text)] font-medium">Create New Shortcut</h3>
             </div>
 
-            <p className="text-[#a8a29e] text-xs font-mono uppercase tracking-wide mb-3">ADD THESE ACTIONS:</p>
+            <p className="text-[var(--color-text-muted)] text-xs font-mono uppercase tracking-wide mb-3">ADD THESE ACTIONS:</p>
             
-            <div className="space-y-3 text-sm text-[#6b6560]">
+            <div className="space-y-3 text-sm text-[var(--color-text-secondary)]">
               <p>
-                3.1 <span className="text-[#1a1a1a]">&quot;Get Contents of URL&quot;</span> → paste the following URL there:
+                3.1 <span className="text-[var(--color-text)]">&quot;Get Contents of URL&quot;</span> → paste the following URL there:
               </p>
               
               {/* URL display with copy button */}
-              <div className="flex items-center gap-2 bg-white border border-[#d4cfc8] p-3">
-                <span className="flex-1 text-[#a8a29e] text-xs font-mono truncate">
+              <div className="flex items-center gap-2 bg-[var(--color-surface)] border border-[var(--color-border)] p-3">
+                <span className="flex-1 text-[var(--color-text-muted)] text-xs font-mono truncate">
                   {apiUrl || 'Enter birthday above...'}
                 </span>
                 <button
                   onClick={copyUrl}
                   disabled={!apiUrl}
-                  className="p-1.5 hover:bg-[#f5f3f0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1.5 hover:bg-[var(--color-remaining)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Copy URL"
                 >
                   {copied ? (
                     <CheckIcon className="w-4 h-4 text-green-600" />
                   ) : (
-                    <CopyIcon className="w-4 h-4 text-[#6b6560]" />
+                    <CopyIcon className="w-4 h-4 text-[var(--color-text-secondary)]" />
                   )}
                 </button>
               </div>
 
               <p>
-                3.2 <span className="text-[#1a1a1a]">&quot;Set Wallpaper Photo&quot;</span> → choose <span className="text-[#1a1a1a]">&quot;Lock Screen&quot;</span>
+                3.2 <span className="text-[var(--color-text)]">&quot;Set Wallpaper Photo&quot;</span> → choose <span className="text-[var(--color-text)]">&quot;Lock Screen&quot;</span>
               </p>
             </div>
           </div>
 
           {/* Warning box */}
-          <div className="bg-white border border-[#c45d3a]/30 p-4 mb-8">
-            <p className="text-[#c45d3a] text-sm leading-relaxed">
-              <span className="font-semibold">Important:</span> In &quot;Set Wallpaper Photo&quot;, tap the arrow (→) to show options → disable both <span className="font-semibold text-[#1a1a1a]">&quot;Crop to Subject&quot;</span> and <span className="font-semibold text-[#1a1a1a]">&quot;Show Preview&quot;</span>
+          <div className="bg-[var(--color-surface)] border border-[var(--color-accent)]/30 p-4 mb-8">
+            <p className="text-[var(--color-accent)] text-sm leading-relaxed">
+              <span className="font-semibold">Important:</span> In &quot;Set Wallpaper Photo&quot;, tap the arrow (→) to show options → disable both <span className="font-semibold text-[var(--color-text)]">&quot;Crop to Subject&quot;</span> and <span className="font-semibold text-[var(--color-text)]">&quot;Show Preview&quot;</span>
             </p>
-            <p className="text-[#a8a29e] text-xs mt-2">
+            <p className="text-[var(--color-text-muted)] text-xs mt-2">
               This prevents iOS from cropping and asking for confirmation each time
             </p>
           </div>
@@ -223,7 +227,7 @@ export function MobileSetupModal({ isOpen, onClose, birthDate, baseUrl }: Mobile
           {/* Close button */}
           <button
             onClick={onClose}
-            className="w-full text-center py-3 bg-[#1a1a1a] text-white font-mono text-sm tracking-wide hover:bg-[#333] transition-colors"
+            className="w-full text-center py-3 bg-[var(--color-lived)] text-[var(--color-bg)] font-mono text-sm tracking-wide hover:opacity-80 transition-opacity"
           >
             Close
           </button>

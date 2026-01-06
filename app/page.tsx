@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { LifeInWeeksCanvas, LifeInWeeksControls, type LifeInWeeksCanvasRef } from '@/components/LifeInWeeksCanvas'
 import { WallpaperMode } from '@/components/WallpaperMode'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import {
   parseBirthDate,
   validateBirthDate,
@@ -95,6 +96,11 @@ function HomeContent() {
 
   return (
     <main className="noise-bg min-h-screen">
+      {/* Theme Toggle - fixed top right */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Hero Section */}
       <section className="relative px-6 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center">
@@ -103,10 +109,10 @@ function HomeContent() {
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
-            <h1 className="text-4xl md:text-6xl font-semibold tracking-tight mb-6 text-[#1a1a1a]">
+            <h1 className="text-4xl md:text-6xl font-semibold tracking-tight mb-6 text-[var(--color-text)]">
               Your Life in Weeks
             </h1>
-            <p className="text-lg md:text-xl text-[#6b6560] max-w-2xl mx-auto mb-4 leading-relaxed">
+            <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto mb-4 leading-relaxed">
               A visual representation of a 90-year human life. Each box is one week.
               <span className="block mt-2 text-base italic">
                 Inspired by Tim Urban&apos;s{' '}
@@ -114,7 +120,7 @@ function HomeContent() {
                   href="https://waitbutwhy.com/2014/05/life-weeks.html"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#c45d3a] hover:underline"
+                  className="text-[var(--color-accent)] hover:underline"
                 >
                   Wait But Why
                 </a>{' '}
@@ -130,7 +136,7 @@ function HomeContent() {
             }`}
           >
             <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-              <label className="block text-sm font-mono text-[#6b6560] mb-3 tracking-wide">
+              <label className="block text-sm font-mono text-[var(--color-text-secondary)] mb-3 tracking-wide">
                 ENTER YOUR BIRTH DATE
               </label>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -138,18 +144,18 @@ function HomeContent() {
                   type="date"
                   value={birthDateInput}
                   onChange={(e) => setBirthDateInput(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-[#d4cfc8] bg-white text-[#1a1a1a] focus:outline-none focus:border-[#1a1a1a] transition-colors font-mono"
+                  className="flex-1 px-4 py-3 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] focus:outline-none focus:border-[var(--color-text)] transition-colors font-mono"
                   max={new Date().toISOString().split('T')[0]}
                 />
                 <button
                   type="submit"
-                  className="btn-primary px-8 py-3 bg-[#1a1a1a] text-white font-mono text-sm tracking-wide hover:bg-[#333] transition-colors"
+                  className="btn-primary px-8 py-3 bg-[var(--color-lived)] text-[var(--color-bg)] font-mono text-sm tracking-wide hover:opacity-80 transition-opacity"
                 >
                   Generate
                 </button>
               </div>
               {error && (
-                <p className="mt-3 text-[#c45d3a] text-sm font-mono">{error}</p>
+                <p className="mt-3 text-[var(--color-accent)] text-sm font-mono">{error}</p>
               )}
             </form>
           </div>
@@ -163,34 +169,34 @@ function HomeContent() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
               <div className="stat-card">
-                <div className="text-3xl md:text-4xl font-semibold text-[#1a1a1a] mb-1">
+                <div className="text-3xl md:text-4xl font-semibold text-[var(--color-text)] mb-1">
                   {stats.weeksLived.toLocaleString()}
                 </div>
-                <div className="text-sm font-mono text-[#6b6560] tracking-wide">
+                <div className="text-sm font-mono text-[var(--color-text-secondary)] tracking-wide">
                   WEEKS LIVED
                 </div>
               </div>
               <div className="stat-card">
-                <div className="text-3xl md:text-4xl font-semibold text-[#c45d3a] mb-1">
+                <div className="text-3xl md:text-4xl font-semibold text-[var(--color-accent)] mb-1">
                   {stats.weeksRemaining.toLocaleString()}
                 </div>
-                <div className="text-sm font-mono text-[#6b6560] tracking-wide">
+                <div className="text-sm font-mono text-[var(--color-text-secondary)] tracking-wide">
                   WEEKS REMAINING
                 </div>
               </div>
               <div className="stat-card">
-                <div className="text-3xl md:text-4xl font-semibold text-[#1a1a1a] mb-1">
+                <div className="text-3xl md:text-4xl font-semibold text-[var(--color-text)] mb-1">
                   {stats.percentageLived.toFixed(1)}%
                 </div>
-                <div className="text-sm font-mono text-[#6b6560] tracking-wide">
+                <div className="text-sm font-mono text-[var(--color-text-secondary)] tracking-wide">
                   OF 90 YEARS
                 </div>
               </div>
               <div className="stat-card">
-                <div className="text-3xl md:text-4xl font-semibold text-[#1a1a1a] mb-1">
+                <div className="text-3xl md:text-4xl font-semibold text-[var(--color-text)] mb-1">
                   {stats.yearsLived.toFixed(1)}
                 </div>
-                <div className="text-sm font-mono text-[#6b6560] tracking-wide">
+                <div className="text-sm font-mono text-[var(--color-text-secondary)] tracking-wide">
                   YEARS OLD
                 </div>
               </div>
@@ -198,15 +204,15 @@ function HomeContent() {
 
             {/* Progress Bar */}
             <div className="mb-12">
-              <div className="h-2 bg-[#e8e4df] rounded-full overflow-hidden relative">
+              <div className="h-2 bg-[var(--color-remaining)] rounded-full overflow-hidden relative">
                 <div
-                  className="h-full bg-[#1a1a1a] transition-all duration-1000 ease-out flex items-center justify-end"
+                  className="h-full bg-[var(--color-lived)] transition-all duration-1000 ease-out flex items-center justify-end"
                   style={{ width: `${Math.min(100, stats.percentageLived)}%` }}
                 >
-                  <div className="w-2 h-2 bg-[#c45d3a] flex-shrink-0" />
+                  <div className="w-2 h-2 bg-[var(--color-accent)] flex-shrink-0" />
                 </div>
               </div>
-              <div className="flex justify-between mt-2 text-xs font-mono text-[#a8a29e]">
+              <div className="flex justify-between mt-2 text-xs font-mono text-[var(--color-text-muted)]">
                 <span>Birth</span>
                 <span>90 years</span>
               </div>
@@ -218,16 +224,16 @@ function HomeContent() {
             </div>
 
             {/* Canvas */}
-            <div className="bg-white border border-[#d4cfc8]">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)]">
               <LifeInWeeksCanvas ref={canvasRef} birthDate={birthDate} hideControls />
             </div>
 
             {/* Quote */}
             <div className="mt-16 text-center max-w-2xl mx-auto">
-              <blockquote className="text-xl md:text-2xl italic text-[#6b6560] leading-relaxed">
+              <blockquote className="text-xl md:text-2xl italic text-[var(--color-text-secondary)] leading-relaxed">
                 &ldquo;The trouble is, you think you have time.&rdquo;
               </blockquote>
-              <cite className="block mt-4 text-sm font-mono text-[#a8a29e]">
+              <cite className="block mt-4 text-sm font-mono text-[var(--color-text-muted)]">
                 — Jack Kornfield
               </cite>
             </div>
@@ -247,7 +253,7 @@ function HomeContent() {
               <div className="p-6">
                 <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-[#1a1a1a]"
+                    className="w-8 h-8 text-[var(--color-text)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -260,15 +266,15 @@ function HomeContent() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">4,680 Weeks</h3>
-                <p className="text-[#6b6560] text-sm leading-relaxed">
+                <h3 className="text-lg font-semibold mb-2 text-[var(--color-text)]">4,680 Weeks</h3>
+                <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
                   That&apos;s how many weeks are in 90 years. Each tiny square represents one week of your life.
                 </p>
               </div>
               <div className="p-6">
                 <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-[#1a1a1a]"
+                    className="w-8 h-8 text-[var(--color-text)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -281,15 +287,15 @@ function HomeContent() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Visual Clarity</h3>
-                <p className="text-[#6b6560] text-sm leading-relaxed">
+                <h3 className="text-lg font-semibold mb-2 text-[var(--color-text)]">Visual Clarity</h3>
+                <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
                   See your past and future laid out as a simple grid. Dark squares are weeks you&apos;ve lived.
                 </p>
               </div>
               <div className="p-6">
                 <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-[#1a1a1a]"
+                    className="w-8 h-8 text-[var(--color-text)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -302,8 +308,8 @@ function HomeContent() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Download</h3>
-                <p className="text-[#6b6560] text-sm leading-relaxed">
+                <h3 className="text-lg font-semibold mb-2 text-[var(--color-text)]">Download</h3>
+                <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
                   Save your personalized life chart as a high-quality PNG to print or share.
                 </p>
               </div>
@@ -313,15 +319,15 @@ function HomeContent() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-[#d4cfc8] px-6 py-8">
-        <div className="max-w-4xl mx-auto text-center text-sm text-[#a8a29e] font-mono">
+      <footer className="border-t border-[var(--color-border)] px-6 py-8">
+        <div className="max-w-4xl mx-auto text-center text-sm text-[var(--color-text-muted)] font-mono">
           <p>
             Made with{' '}
             <a
               href="https://github.com/adaofeliz/life-in-weeks"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-[#6b6560] transition-colors"
+              className="hover:text-[var(--color-text-secondary)] transition-colors"
             >
               care
             </a>
@@ -330,7 +336,7 @@ function HomeContent() {
               href="https://waitbutwhy.com/2014/05/life-weeks.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#6b6560] hover:text-[#1a1a1a] transition-colors"
+              className="text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
             >
               Wait But Why
             </a>
@@ -345,7 +351,7 @@ export default function Home() {
   return (
     <Suspense fallback={
       <main className="noise-bg min-h-screen flex items-center justify-center">
-        <div className="text-[#6b6560] font-mono">Loading...</div>
+        <div className="text-[var(--color-text-secondary)] font-mono">Loading...</div>
       </main>
     }>
       <HomeContent />

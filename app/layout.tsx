@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Crimson_Pro, JetBrains_Mono } from 'next/font/google'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
 
 const crimsonPro = Crimson_Pro({
@@ -32,9 +33,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${crimsonPro.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${crimsonPro.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="antialiased">
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         <SpeedInsights />
         <Analytics />
       </body>
